@@ -1,0 +1,9 @@
+<launch>
+
+  <arg name="dir" default="/home/marco/Desktop/BPR_dataset/camera0" />
+
+  <node pkg="ros_utils" name="stream" type="stream_image_over_topic.py" output="screen">
+    <param name="directory" value="$(arg dir)" />
+  </node>
+
+</launch>
