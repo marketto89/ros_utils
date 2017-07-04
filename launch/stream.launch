@@ -6,4 +6,29 @@
     <param name="directory" value="$(arg dir)" />
   </node>
 
+  <!-- point cloud with ir in place of rgb -->
+  <node pkg="nodelet" type="nodelet" name="points_xyz"
+        args="standalone depth_image_proc/point_cloud_xyz"
+        respawn="false">
+    <remap from="/image/camera_info"             to="/camera_info" />
+    <remap from="image_rect" to="/image/depth" />
+    <remap from="points"     to="/points" />
+    <param name="queue_size" type="int" value="2" />
+  </node> 
+
+  <!--node pkg="ros_utils" name="vis1" type="skeleton_visualization.py" output="screen">
+  	<param name="skeleton_topic_to_visualize" value="/skeletons/skeleton" />
+  	<param name="topic_to_publish" value="/skeletons_marker1" />
+  	<param name="red" value="1.0" />
+  	<param name="blue" value="0.0" />
+  	<param name="green" value="0.0" />
+  </node-->
+  <node pkg="ros_utils" name="vis2" type="skeleton_visualization.py" output="screen">
+  	<param name="skeleton_topic_to_visualize" value="/skeleton_base" />
+  	<param name="topic_to_publish" value="/skeletons_marker2" />
+  	<param name="red" value="0.0" />
+  	<param name="blue" value="0.0" />
+  	<param name="green" value="1.0" />
+  </node>
+
 </launch>

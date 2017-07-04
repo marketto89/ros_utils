@@ -4,8 +4,10 @@ directory = "/home/marco/Desktop/BPR_dataset/camera0"
 # camera_info_filename = "/home/marco/Desktop/BPR_dataset/camera0/calib_ir.yaml"
 rgb_topic_to_stream = "/image/rgb"
 depth_topic_to_stream = "/image/depth"
-camera_info_topic_to_stream = "/depth/camera_info"
+camera_info_topic_to_stream = "/camera_info"
 names_topic_to_stream = "/names"
+
+seconds_for_image = 0.5
 
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
@@ -19,7 +21,7 @@ import os
 import fnmatch
 import sys
 import math
-import numpy
+import numpy 
 
 def recursive_glob(rootdir='.', pattern='*', exclude=[]):
   """Search recursively for files matching a specified pattern.
@@ -52,8 +54,8 @@ if __name__ == "__main__":
   yaml_data = numpy.asarray(cv2.cv.Load(directory + "/calib_ir.yaml"))
   
   cam_info = CameraInfo()
-  cam_info.height = 540
-  cam_info.width = 960
+  cam_info.height = 424
+  cam_info.width = 512
   cam_info.distortion_model = 'plumb_bob'
   cam_info.K[0] = yaml_data[0,0]
   cam_info.K[2] = yaml_data[0,2]
@@ -70,13 +72,19 @@ if __name__ == "__main__":
     print (str(i).zfill(4) + " / " + str(len(image_list_rgb)))
     now = rospy.get_rostime()
     rgb_frame = cv2.imread(image_list_rgb[i], cv2.IMREAD_COLOR)
-    depth_frame = cv2.imread(image_list_depth[i], cv2.IMREAD_GRAYSCALE)
+    depth_frame = cv2.imread(image_list_depth[i], cv2.IMREAD_ANYDEPTH)
+    # depth_frame = depth_frame[:, 154:]
+    # depth_frame = depth_frame[:, :-154]
+    # depth_frame = cv2.resize(depth_frame,(424, 512), interpolation = cv2.INTER_CUBIC)
     msg_frame_rgb = CvBridge().cv2_to_imgmsg(rgb_frame, encoding="bgr8")
-    msg_frame_depth = CvBridge().cv2_to_imgmsg(depth_frame, encoding="mono8")
+    msg_frame_depth = CvBridge().cv2_to_imgmsg(depth_frame, encoding="16UC1")
+    msg_frame_depth.width = depth_frame.shape[1]
+    msg_frame_depth.height = depth_frame.shape[0]
+    # msg_frame_depth.step = 
     msg_frame_rgb.header.stamp = now
-    msg_frame_depth.header.stamp = now
-    cam_info.header.stamp = now
-    while (rospy.get_rostime() - now).to_sec() < 0.5:
+    msg_frame_rgb.header.frame_id = "world"
+    msg_frame_depth.header = cam_info.header = msg_frame_rgb.header
+    while (rospy.get_rostime() - now).to_sec() < seconds_for_image:
       rgb_pub.publish(msg_frame_rgb)
       depth_pub.publish(msg_frame_depth)
       camera_info_pub.publish(cam_info)
